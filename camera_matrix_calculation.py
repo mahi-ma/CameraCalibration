@@ -90,4 +90,6 @@ print(mtx)
 #Final camera matrix
 camera_matx = np.dot(intrinsic_matx, extrensic_matx)
 
+print(camera_matx)
+
 cv.destroyAllWindows()
