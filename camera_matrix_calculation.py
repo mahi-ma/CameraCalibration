@@ -17,7 +17,7 @@ objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
 objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 images = glob.glob('chess\leftImages\*.png')
-print(images)
+
 for fname in images:
     img = cv.imread(fname)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -35,30 +35,22 @@ for fname in images:
 
 ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-# objpoints1 = np.array(objpoints)
-# objpoints1 = objpoints1.astype('float64')
-# imgpoints1 = np.array(imgpoints)
-# imgpoints1 = imgpoints1.astype('float64')
-
-# flag = cv.SOLVEPNP_ITERATIVE
-# retval, rvecs, tvecs = cv.solvePnP(objpoints1, imgpoints1, mtx, dist, flags= 0)
-
-# print("rotation matrix:")
-# print(cv.Rodrigues(np.array(rvecs)))
 r_obj = Rotation.from_rotvec(np.array(rvecs[0]).reshape(1,3))
 rot_matrix = r_obj.as_matrix()
 
 nprvecs = np.array(rvecs)
 nptvecs = np.array(tvecs)
 
+## Formation of rotation matrix from rotation vector
+# calucation of cos and sin of angle from rotation vector
 xc, xs = trig(nprvecs[0][0][0])
 yc, ys = trig(nprvecs[0][1][0])
 zc, zs = trig(nprvecs[0][2][0])
 
+# formation of translation matrix
 tx = nptvecs[0][0][0]
 ty = nptvecs[0][1][0]
 tz = nptvecs[0][2][0]
-
 translation_mtx = np.array([
     [1,0,0,tx],
     [0,1,0,ty],
@@ -66,6 +58,7 @@ translation_mtx = np.array([
     [0,0,0,1]
 ])
 
+#Forming rotation matrix around x, y z axis
 rotation_x_matx = np.array([
     [1,0,0,0],
     [0,xc,-xs,0],
@@ -88,8 +81,13 @@ rotation_z_matx = np.array([
 ])
 
 extrensic_matx = np.dot(rotation_z_matx, np.dot(rotation_y_matx, np.dot(rotation_x_matx, translation_mtx)))
+
+#Converting intrinsic matrix from 3X3 to 4X4
 intrinsic_matx = np.append( np.append(mtx, [[0],[0],[1]], axis=1), [np.array([0,0,0,1])], axis=0)
+
+print(mtx)
+
+#Final camera matrix
 camera_matx = np.dot(intrinsic_matx, extrensic_matx)
-print(camera_matx)
 
 cv.destroyAllWindows()
