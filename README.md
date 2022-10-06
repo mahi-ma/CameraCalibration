@@ -11,7 +11,7 @@ Resultant Camera matrix= <br>
 
 Answer 2.) Created program calculate_dimensions.py to calculate sides of our object using the perspective projection equation and calculated the length and width of our chess board.
 
-Answer 3.) No its not feasible. I ran the RGB stream from mono camera using program depth_capture_mono.py and the depth_capture_stereo.py but got an error saying camera unrecognizable
+Answer 3.) Yes it is feasible to run both mono stream and stereo stream together. Oak-d device has 3 camera, 2 for mono stream, and middle one for rgb stream.
 
 Answer 4.) Ran the calibration script from luxinos documentation<br>
 Luxinos oak d camera calibration Intrinsic matrix:<br>
