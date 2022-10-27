@@ -5,6 +5,53 @@ import depthai as dai
 
 ####Program to capture color images from OAK-D Lite
 
+def integral_image(image, *, dtype=None):
+    if dtype is None and image.real.dtype.kind == 'f':
+        dtype = np.promote_types(image.dtype, np.float64)
+
+    S = image
+    for i in range(image.ndim):
+        S = S.cumsum(axis=i, dtype=dtype)
+    return S
+
+
+def integrate(ii, start, end):
+    start = np.atleast_2d(np.array(start))
+    end = np.atleast_2d(np.array(end))
+    rows = start.shape[0]
+
+    total_shape = ii.shape
+    total_shape = np.tile(total_shape, [rows, 1])
+
+    start_negatives = start < 0
+    end_negatives = end < 0
+    start = (start + total_shape) * start_negatives + \
+             start * ~(start_negatives)
+    end = (end + total_shape) * end_negatives + \
+           end * ~(end_negatives)
+
+    if np.any((end - start) < 0):
+        raise IndexError('end coordinates must be greater or equal to start')
+
+    S = np.zeros(rows)
+    bit_perm = 2 ** ii.ndim
+    width = len(bin(bit_perm - 1)[2:])
+    for i in range(bit_perm):  
+        binary = bin(i)[2:].zfill(width)
+        bool_mask = [bit == '1' for bit in binary]
+
+        sign = (-1)**sum(bool_mask)
+
+        bad = [np.any(((start[r] - 1) * bool_mask) < 0)
+               for r in range(rows)]  
+
+        corner_points = (end * (np.invert(bool_mask))) + \
+                         ((start - 1) * bool_mask)
+
+        S += [sign * ii[tuple(corner_points[r])] if(not bad[r]) else 0
+              for r in range(rows)]
+    return S
+
 streams = []
 # Enable one or both streams
 streams.append('isp')
@@ -69,14 +116,18 @@ while True:
             shape = (height * 3 // 2, width)
             yuv420p = payload.reshape(shape).astype(np.uint8)
             bgr = cv2.cvtColor(yuv420p, cv2.COLOR_YUV2BGR_IYUV)
-            grayscale_img =  cv2.cvtColor(bgr,cv2.COLOR_BGR2GRAY)
+            # grayscale_img =  cv2.cvtColor(bgr,cv2.COLOR_BGR2GRAY)
+            frame= cv2.copyMakeBorder(bgr, 50, 50, 50, 50, cv2.BORDER_CONSTANT, (0,0,0))
+            frame=integral_image(frame)
+            frame = frame/np.amax(frame)
+            frame = np.clip(frame, 0,255)
         if capture_flag:  # Save to disk if 'space' was pressed
             filename = capture_file_info_str + '.png'
             print("Saving to file:", filename)
             grayscale_img = np.ascontiguousarray(grayscale_img)  # just in case
             cv2.imwrite(filename, grayscale_img)
         bgr = np.ascontiguousarray(bgr)  # just in case
-        cv2.imshow(name, grayscale_img)
+        cv2.imshow(name, frame)
     # Reset capture_flag after iterating through all streams
     capture_flag = False
     key = cv2.waitKey(5)
