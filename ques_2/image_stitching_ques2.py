@@ -8,7 +8,7 @@ imagesPaths4 = ["./stitching_images/fourthSet/bookstore5.jpg","./stitching_image
 imagesPaths5 = ["./stitching_images/fifthSet/tdeck1.jpg","./stitching_images/fifthSet/tdeck2.jpg","./stitching_images/fifthSet/tdeck3.jpg"]
 images = []
 
-for path in imagesPaths4:
+for path in imagesPaths1:
 	image = cv2.imread(path)
 	images.append(image)
 
