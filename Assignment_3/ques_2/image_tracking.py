@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-filename ="./images/cctv.mp4"
+filename ="../ques_3/room-video.webm"
 capture = cv2.VideoCapture(filename)
 
 def img_alignment(img1, img2):
